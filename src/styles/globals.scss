@@ -2,6 +2,27 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  list-style: none;
+}
+:root {
+  --white: #ffffff;
+  --gray: #d7d7d7;
+
+  --highlight: #ff57b2;
 }
 
-// TODO
+body {
+  color: var(--gray);
+  background: #1a1d23;
+  font-family: 'Inter', sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--white);
+  font-weight: bold;
+}
