@@ -1,1 +1,18 @@
-// TODO
+.header {
+  width: 85%;
+  margin: 0 auto;
+  max-width: 721px;
+  //   padding-top: 2.5rem;
+
+  //   @media (min-width: 1024px) {
+  //     padding-top: 4.5rem;
+  //   }
+
+  h1.home {
+    padding-top: 2.5rem;
+  }
+
+  img.slug {
+    padding: 2.5rem 0;
+  }
+}

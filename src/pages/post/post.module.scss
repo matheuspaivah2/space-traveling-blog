@@ -1,1 +1,25 @@
-// TODO
+.banner {
+  width: 100%;
+  margin-bottom: 2.5rem;
+  max-height: 400px;
+  object-fit: cover;
+}
+
+.article {
+  padding: 2.5rem 0;
+
+  h1 {
+    font-size: 3rem;
+  }
+  h2 {
+    margin-bottom: 1rem;
+  }
+  p + p {
+    margin-top: 1rem;
+  }
+
+  a {
+    text-decoration: none;
+    color: var(--highlight);
+  }
+}

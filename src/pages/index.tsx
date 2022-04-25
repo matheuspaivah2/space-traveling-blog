@@ -2,9 +2,14 @@ import { MdDateRange } from 'react-icons/md';
 import { FiUser } from 'react-icons/fi';
 import { GetStaticProps } from 'next/types';
 import Link from 'next/link';
+import Head from 'next/head';
+import { useState } from 'react';
+import { format } from 'date-fns';
+import ptBR from 'date-fns/locale/pt-BR';
 import { getPrismicClient } from '../services/prismic';
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
+import Header from '../components/Header';
 
 interface Post {
   uid?: string;
@@ -22,42 +27,81 @@ interface PostPagination {
 }
 
 interface HomeProps {
-  posts: PostPagination;
+  postsPagination: PostPagination;
 }
 
-export default function Home({ posts }: HomeProps): JSX.Element {
+export default function Home({ postsPagination }: HomeProps): JSX.Element {
+  const [loadedPosts, setLoadedPosts] = useState([...postsPagination.results]);
+  const [nextPage, setNextPage] = useState(postsPagination.next_page);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const updateDate: (date: string) => string = (date: string) => {
+    return format(new Date(date), 'dd MMM yyyy', {
+      locale: ptBR,
+    });
+  };
+
+  const loadMorePosts: () => void = async () => {
+    setIsLoading(true);
+    const morePosts = await fetch(nextPage)
+      .then(r => r.json())
+      .then(r => r);
+
+    const nextPagePosts = morePosts.results.map(post => {
+      return {
+        uid: post.uid,
+        first_publication_date: post.first_publication_date,
+        data: {
+          title: post.data.title,
+          subtitle: post.data.subtitle,
+          author: post.data.author,
+        },
+      };
+    });
+
+    setNextPage(morePosts.next_page);
+    setLoadedPosts([...loadedPosts, ...nextPagePosts]);
+    setIsLoading(false);
+  };
   return (
     <>
-      <main className={`${styles.container} ${commonStyles.maxWidth}`}>
-        <h1 title="Blog do Ignite">
-          <img src="/img/logo.svg" alt="Logo do Blog" />
-        </h1>
-
+      <Head>
+        <title>Space Traveling Blog</title>
+      </Head>
+      <Header isHome />
+      <main className={commonStyles.container}>
         <ul className={styles.posts}>
-          {posts.results.map(post => (
+          {loadedPosts.map(post => (
             <li key={post.uid}>
-              <Link href={`/${post.uid}`}>
+              <Link href={`/post/${post.uid}`}>
                 <a>
                   <h2>{post.data.title}</h2>
-                  <p>{post.data.subtitle}</p>
-                  <div>
-                    <time>
-                      <MdDateRange />
-                      {post.first_publication_date}
-                    </time>
-                    <p>
-                      <FiUser />
-                      {post.data.author}
-                    </p>
-                  </div>
                 </a>
               </Link>
+              <p className={styles.excerpt}>{post.data.subtitle}</p>
+              <div className={commonStyles.status}>
+                <time>
+                  <MdDateRange />
+                  {updateDate(post.first_publication_date)}
+                </time>
+                <p>
+                  <FiUser />
+                  {post.data.author}
+                </p>
+              </div>
             </li>
           ))}
         </ul>
-        <button className={styles.button} type="button">
-          Carregar mais posts
-        </button>
+        {nextPage && (
+          <button
+            className={styles.button}
+            type="button"
+            onClick={loadMorePosts}
+          >
+            Carregar mais posts
+          </button>
+        )}
+        {isLoading && <div className={commonStyles.loader} />}
       </main>
     </>
   );
@@ -65,20 +109,14 @@ export default function Home({ posts }: HomeProps): JSX.Element {
 
 export const getStaticProps: GetStaticProps = async () => {
   const prismic = getPrismicClient({});
-  const postsResponse = await prismic.getByType('post');
+  const postsResponse = await prismic.getByType('post', {
+    pageSize: 5,
+  });
 
   const homePosts = postsResponse.results.map(post => {
-    const updateDate = new Date(post.first_publication_date).toLocaleDateString(
-      'pt-Br',
-      {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      }
-    );
     return {
       uid: post.uid,
-      first_publication_date: updateDate,
+      first_publication_date: post.first_publication_date,
       data: {
         title: post.data.title,
         subtitle: post.data.subtitle,
@@ -87,12 +125,12 @@ export const getStaticProps: GetStaticProps = async () => {
     };
   });
 
-  const posts = {
+  const postsPagination = {
     next_page: postsResponse.next_page,
     results: homePosts,
   };
   return {
-    props: { posts },
+    props: { postsPagination },
     revalidate: 60 * 60,
   };
 };
