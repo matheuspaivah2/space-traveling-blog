@@ -4,6 +4,7 @@ import { MdDateRange } from 'react-icons/md';
 import { FiUser } from 'react-icons/fi';
 import { AiOutlineClockCircle } from 'react-icons/ai';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 import { getPrismicClient } from '../../services/prismic';
@@ -73,6 +74,9 @@ export default function Post({ post }: PostProps): JSX.Element {
   };
   return (
     <>
+      <Head>
+        <title>{blogPost.data.title}</title>
+      </Head>
       <Header isHome={false} />
       <img src={blogPost.data.banner.url} alt="" className={styles.banner} />
       <main className={commonStyles.container}>
@@ -94,13 +98,13 @@ export default function Post({ post }: PostProps): JSX.Element {
           </span>
         </div>
         <article className={styles.article}>
-          {blogPost.data.content.map(p => (
-            <div key={`${p}`}>
-              <h2>{p.heading}</h2>
+          {blogPost.data.content.map(block => (
+            <div key={`${block}`}>
+              <h2>{block.heading}</h2>
               <div
                 // eslint-disable-next-line react/no-danger
                 dangerouslySetInnerHTML={{
-                  __html: RichText.asHtml(p.body),
+                  __html: RichText.asHtml(block.body),
                 }}
               />
             </div>
